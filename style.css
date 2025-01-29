@@ -1,0 +1,29 @@
+@charset "UTF-8";
+
+body {
+   background-color: #eeeeff;
+}
+
+#draft-table td {
+   border: 1px #666699 solid;
+   padding: 9px;
+   text-align: center;
+}
+
+.make-pick {
+   width: 100%;
+}
+
+.preference-1, .preference-2 {
+   border: 6px solid rgba(0, 0, 0, 0);
+   padding: 15px;
+   background-color: #ffffee;
+}
+
+.picked-by-self {
+   border: 6px dashed #000033;
+}
+
+.picked-by-opponent {
+   border: 6px solid #eeeeff;
+}

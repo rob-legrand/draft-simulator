@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en-US"><head>
+
+<meta charset="UTF-8" />
+<title>Draft</title>
+
+<link href="style.css" rel="stylesheet" />
+
+</head><body>
+
+<p id="turn"></p>
+<table id="draft-table">
+   <tbody>
+      <tr>
+         <td><button class="make-pick">Pick A</button></td>
+         <td><div class="preference-1"></div></td>
+         <td><div class="preference-2"></div></td>
+      </tr><tr>
+         <td><button class="make-pick">Pick B</button></td>
+         <td><div class="preference-1"></div></td>
+         <td><div class="preference-2"></div></td>
+      </tr><tr>
+         <td><button class="make-pick">Pick C</button></td>
+         <td><div class="preference-1"></div></td>
+         <td><div class="preference-2"></div></td>
+      </tr><tr>
+         <td><button class="make-pick">Pick D</button></td>
+         <td><div class="preference-1"></div></td>
+         <td><div class="preference-2"></div></td>
+      </tr><tr>
+         <td><button class="make-pick">Pick E</button></td>
+         <td><div class="preference-1"></div></td>
+         <td><div class="preference-2"></div></td>
+      </tr><tr>
+         <td><button class="make-pick">Pick F</button></td>
+         <td><div class="preference-1"></div></td>
+         <td><div class="preference-2"></div></td>
+      </tr><tr>
+         <td><button class="make-pick">Pick G</button></td>
+         <td><div class="preference-1"></div></td>
+         <td><div class="preference-2"></div></td>
+      </tr><tr>
+         <td><button class="make-pick">Pick H</button></td>
+         <td><div class="preference-1"></div></td>
+         <td><div class="preference-2"></div></td>
+      </tr><tr>
+         <td>1's picks</td>
+         <td><div class="preference-total-1"></div></td>
+         <td><div class="preference-total-2"></div></td>
+      </tr><tr>
+         <td>2's picks</td>
+         <td><div class="preference-total-1"></div></td>
+         <td><div class="preference-total-2"></div></td>
+      </tr>
+   </tbody>
+</table>
+
+<p>
+   <button id="pick-greedy">Pick greedy</button>
+   <button id="pick-antigreedy">Pick anti-greedy</button>
+   <button id="pick-popular">Pick popular</button>
+   <button id="pick-minimax">Pick minimax</button>
+</p>
+
+<p>
+   <button id="reset-picks">Reset this draft</button>
+   <button id="reset-all">Randomize preferences from scratch</button>
+</p>
+
+<template>
+   <tr>
+      <td><button class="make-pick">Pick</button></td>
+      <td><div class="preference-1"></div></td>
+      <td><div class="preference-2"></div></td>
+   </tr>
+</template>
+
+<script src="script.js"></script>
+
+</body></html>

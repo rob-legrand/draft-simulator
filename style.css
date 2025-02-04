@@ -1,29 +1,85 @@
 @charset "UTF-8";
 
-body {
-   background-color: #eeeeff;
+html {
+   box-sizing: border-box;
 }
 
-#draft-table td {
-   border: 1px #666699 solid;
-   padding: 9px;
+*, *:before, *:after {
+   box-sizing: inherit;
+}
+
+body {
+   align-items: center;
+   background-color: #333366;
+   color: #ffffee;
+   display: flex;
+   flex-direction: column;
+   font-family: Verdana, Geneva, Tahoma, Arial, sans-serif;
+}
+
+h1 {
+   font-size: 200%;
+   font-weight: normal;
    text-align: center;
 }
 
-.make-pick {
-   width: 100%;
+.all-picks {
+   align-items: center;
+   display: flex;
+   flex-direction: row;
+   justify-content: center;
 }
 
-.preference-1, .preference-2 {
-   border: 6px solid rgba(0, 0, 0, 0);
-   padding: 15px;
-   background-color: #ffffee;
+.picked-by-1, .picked-by-2, .picker-1-info, .picker-2-info, .unpicked-by-1, .unpicked-by-2 {
+   align-items: center;
+   display: flex;
+   flex-direction: column;
 }
 
-.picked-by-self {
-   border: 6px dashed #000033;
+.picked-by-1, .picked-by-2 {
+   border-color: #666699;
+   border-radius: 16px;
+   border-style: solid;
+   border-width: 8px;
+   margin: 0px 16px;
 }
 
-.picked-by-opponent {
-   border: 6px solid #eeeeff;
+.picker-1-info > div, .picker-2-info > div {
+   margin-top: 24px;
+   text-align: center;
+}
+
+.next-to-pick, #draft-complete {
+   background-color: #ffffcc;
+   border-radius: 8px;
+   color: #000000;
+   padding: 8px;
+}
+
+.preference {
+   align-items: center;
+   background-color: rgb(85, 85, 85);
+   border-radius: 8px;
+   color: #000000;
+   display: flex;
+   font-size: 150%;
+   height: 80px;
+   justify-content: center;
+   margin: 8px;
+   width: 80px;
+}
+
+.pick-missed {
+   border-color: #000066;
+   border-radius: 16px;
+   border-style: solid;
+   border-width: 8px;
+}
+
+.pick-pickable {
+   box-shadow: inset 2px 2px #ccccff, inset -2px -2px #000033;
+}
+
+p {
+   text-align: center;
 }

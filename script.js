@@ -2,7 +2,7 @@
 
 document.addEventListener('DOMContentLoaded', function () {
    'use strict';
-   var createDraft, draft;
+   var createDraft;
 
    createDraft = function (numPicks, oldState) {
       var o, s, whichPick;
@@ -10,8 +10,11 @@ document.addEventListener('DOMContentLoaded', function () {
          getNumPicks: function () {
             return s.numPicks;
          },
-         getNumPicksMade: function () {
-            return s.numPicksMade;
+         getNumPicksMade: function (whichPicker) {
+            if (whichPicker === 1 || whichPicker === 2) {
+               return s.numPicksMade[whichPicker - 1];
+            }
+            return s.numPicksMade[0] + s.numPicksMade[1];
          },
          randomize: function () {
             var hasBeenUsed;
@@ -30,14 +33,34 @@ document.addEventListener('DOMContentLoaded', function () {
             o.resetPicks();
          },
          resetPicks: function () {
-            s.numPicksMade = 0;
+            s.numPicksMade = [0, 0];
             s.picks.forEach(function (pick) {
                pick.pickedBy = 0;
             });
             o.save();
          },
+         swapPreferences: function () {
+            o.resetPicks();
+            s.picks.forEach(function (pick) {
+               var tempPref;
+               tempPref = pick.prefs[0];
+               pick.prefs[0] = pick.prefs[1];
+               pick.prefs[1] = tempPref;
+            });
+            o.save();
+         },
          getPreference: function (whichPicker, whichPick) {
             return s.picks[whichPick].prefs[whichPicker - 1];
+         },
+         getPreferenceTotal: function (whichPickersPreferences, whichPickersPicks) {
+            var total;
+            total = 0;
+            s.picks.forEach(function (pick) {
+               if (pick.pickedBy === whichPickersPicks) {
+                  total += pick.prefs[whichPickersPreferences - 1];
+               }
+            });
+            return total;
          },
          hasBeenPicked: function (whichPick) {
             return s.picks[whichPick].pickedBy > 0;
@@ -46,18 +69,19 @@ document.addEventListener('DOMContentLoaded', function () {
             return s.picks[whichPick].pickedBy;
          },
          isFinished: function () {
-            return s.numPicksMade >= s.numPicks;
+            return o.getNumPicksMade() >= o.getNumPicks();
          },
          whoPicksNext: function () {
-            return o.isFinished() ? 0 : s.numPicksMade % 2 + 1;
+            return o.isFinished() ? 0 : o.getNumPicksMade(1) <= o.getNumPicksMade(2) ? 1 : 2;
          },
-         makePick: function (whichPick) {
+         makePick: function (whichPick, whichPicker) {
             var hasBeenPicked, numPicksLeft, whoPicksNext;
-            if (o.isFinished()) {
+            if (o.isFinished() || (typeof whichPicker === 'number' && whichPicker !== o.whoPicksNext())) {
                return false;
             }
+            whichPicker = o.whoPicksNext();
             if (typeof whichPick !== 'number') {
-               if (whichPick === 'minimax') {
+               if (whichPick === 'cautious') {
                   hasBeenPicked = [];
                   numPicksLeft = 0;
                   s.picks.forEach(function (ignore, index) {
@@ -78,36 +102,10 @@ document.addEventListener('DOMContentLoaded', function () {
                      numPicksLeft -= 1;
                      whoPicksNext = 1 - whoPicksNext;
                   }
-               } else if (whichPick === 'antigreedy') {
-                  var bestTwo = [0, 0];
-                  whichPick = 0;
-                  s.picks.forEach(function (pick, index) {
-                     if (!o.hasBeenPicked(index) && (o.hasBeenPicked(whichPick) || pick.prefs[2 - o.whoPicksNext()] > s.picks[whichPick].prefs[2 - o.whoPicksNext()])) {
-                        whichPick = index;
-                     }
-                  });
-                  if (o.getNumPicksMade() < o.getNumPicks() - 1) {
-                     bestTwo[0] = whichPick;
-                     whichPick = whichPick === 0 ? 1 : 0;
-                     s.picks.forEach(function (pick, index) {
-                        if (index !== bestTwo[0] && !o.hasBeenPicked(index) && (o.hasBeenPicked(whichPick) || pick.prefs[2 - o.whoPicksNext()] > s.picks[whichPick].prefs[2 - o.whoPicksNext()])) {
-                           whichPick = index;
-                        }
-                     });
-                     bestTwo[1] = whichPick;
-                     whichPick = bestTwo[s.picks[bestTwo[0]].prefs[o.whoPicksNext() - 1] > s.picks[bestTwo[1]].prefs[o.whoPicksNext() - 1] ? 0 : 1];
-                  }
-               } else if (whichPick === 'popular') {
-                  whichPick = 0;
-                  s.picks.forEach(function (pick, index) {
-                     if (!o.hasBeenPicked(index) && (o.hasBeenPicked(whichPick) || pick.prefs[0] + pick.prefs[1] > s.picks[whichPick].prefs[0] + s.picks[whichPick].prefs[1])) {
-                        whichPick = index;
-                     }
-                  });
                } else {
                   whichPick = 0;
                   s.picks.forEach(function (pick, index) {
-                     if (!o.hasBeenPicked(index) && (o.hasBeenPicked(whichPick) || pick.prefs[o.whoPicksNext() - 1] > s.picks[whichPick].prefs[o.whoPicksNext() - 1])) {
+                     if (!o.hasBeenPicked(index) && (o.hasBeenPicked(whichPick) || pick.prefs[whichPicker - 1] > s.picks[whichPick].prefs[whichPicker - 1])) {
                         whichPick = index;
                      }
                   });
@@ -116,8 +114,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (o.hasBeenPicked(whichPick)) {
                return false;
             }
-            s.picks[whichPick].pickedBy = o.whoPicksNext();
-            s.numPicksMade += 1;
+            s.picks[whichPick].pickedBy = whichPicker;
+            s.numPicksMade[whichPicker - 1] += 1;
             o.save();
             return true;
          },
@@ -135,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function () {
       if (s.numPicks !== numPicks) {
          s = {
             numPicks: numPicks,
-            numPicksMade: 0,
+            numPicksMade: [0, 0],
             picks: []
          };
          for (whichPick = 0; whichPick < numPicks; whichPick += 1) {
@@ -150,73 +148,104 @@ document.addEventListener('DOMContentLoaded', function () {
    };
 
    (function () {
-      var pickButtons, preference1Elements, preference2Elements, updatePage;
+      var draft, pickedBy1Elements, pickedBy2Elements, preference1Elements, preference2Elements, updatePage;
 
-      pickButtons = Array.prototype.slice.call(document.getElementsByClassName('make-pick'));
-      preference1Elements = Array.prototype.slice.call(document.getElementsByClassName('preference-1'));
-      preference2Elements = Array.prototype.slice.call(document.getElementsByClassName('preference-2'));
+      pickedBy1Elements = Array.prototype.slice.call(document.querySelectorAll('.picked-by-1 .preference'));
+      preference1Elements = Array.prototype.slice.call(document.querySelectorAll('.unpicked-by-1 .preference'));
+      preference2Elements = Array.prototype.slice.call(document.querySelectorAll('.unpicked-by-2 .preference'));
+      pickedBy2Elements = Array.prototype.slice.call(document.querySelectorAll('.picked-by-2 .preference'));
 
       updatePage = function (draft) {
-         var preferenceTotal, updatePreferenceElement;
-         document.getElementById('turn').textContent = draft.isFinished() ?  'The draft has concluded.' : 'Picker ' + draft.whoPicksNext() + '\'s turn to pick:';
-         pickButtons.forEach(function (pickButton, whichPick) {
-            pickButton.disabled = draft.hasBeenPicked(whichPick);
+         var updatePreferenceElement, updatePreferenceTotals;
+         Array.prototype.slice.call(document.querySelectorAll('.next-to-pick')).forEach(function (element, index) {
+            element.style.visibility = draft.whoPicksNext() === index + 1 ? '' : 'hidden';
          });
-         document.getElementById('pick-greedy').disabled = draft.isFinished();
-         document.getElementById('pick-antigreedy').disabled = draft.isFinished();
-         document.getElementById('pick-popular').disabled = draft.isFinished();
-         document.getElementById('pick-minimax').disabled = draft.isFinished();
+         document.getElementById('pick-1-greedy').disabled = draft.whoPicksNext() !== 1;
+         document.getElementById('pick-1-cautious').disabled = draft.whoPicksNext() !== 1;
+         document.getElementById('pick-2-greedy').disabled = draft.whoPicksNext() !== 2;
+         document.getElementById('pick-2-cautious').disabled = draft.whoPicksNext() !== 2;
          updatePreferenceElement = function (whichPicker, element, whichPick) {
             var preference;
             preference = draft.getPreference(whichPicker, whichPick);
             element.textContent = preference;
             element.style.backgroundColor = 'rgb(' + Math.round((1 - preference / 100) * 255) + ', ' + Math.round(preference / 100 * 255) + ', 85)';
-            element.classList.remove('picked-by-self');
-            element.classList.remove('picked-by-opponent');
-            element.classList.add(draft.whoPicked(whichPick) === whichPicker ? 'picked-by-self' : 'picked-by-opponent');
+            if (draft.whoPicked(whichPick) === (whichPicker === 1 ? 2 : 1)) {
+               element.classList.add('pick-missed');
+            } else {
+               element.classList.remove('pick-missed');
+            }
+            if (draft.whoPicked(whichPick) === 0 && draft.whoPicksNext() === whichPicker) {
+               element.classList.add('pick-pickable');
+            } else {
+               element.classList.remove('pick-pickable');
+            }
          };
-         preferenceTotal = 0;
+         pickedBy1Elements.forEach(function (element, whichPick) {
+            updatePreferenceElement(1, element, whichPick);
+            element.style.visibility = draft.whoPicked(whichPick) === 1 ? '' : 'hidden';
+         });
          preference1Elements.forEach(function (element, whichPick) {
             updatePreferenceElement(1, element, whichPick);
-            if (draft.whoPicked(whichPick) === 1) {
-               preferenceTotal += draft.getPreference(1, whichPick);
-            }
+            element.style.visibility = draft.whoPicked(whichPick) === 1 ? 'hidden' : '';
          });
-         document.getElementsByClassName('preference-total-1')[0].textContent = preferenceTotal;
-         preferenceTotal = 0;
          preference2Elements.forEach(function (element, whichPick) {
             updatePreferenceElement(2, element, whichPick);
-            if (draft.whoPicked(whichPick) === 2) {
-               preferenceTotal += draft.getPreference(2, whichPick);
-            }
+            element.style.visibility = draft.whoPicked(whichPick) === 2 ? 'hidden' : '';
          });
-         document.getElementsByClassName('preference-total-2')[1].textContent = preferenceTotal;
+         pickedBy2Elements.forEach(function (element, whichPick) {
+            updatePreferenceElement(2, element, whichPick);
+            element.style.visibility = draft.whoPicked(whichPick) === 2 ? '' : 'hidden';
+         });
+         updatePreferenceTotals = function (whichPickersPreferences, whichPickersPicks) {
+            var preferenceTotal, preferenceTotalElement;
+            preferenceTotalElement = Array.prototype.slice.call(document.querySelectorAll('.picker-' + whichPickersPreferences + '-info .preference'))[whichPickersPreferences === whichPickersPicks ? 0 : 1];
+            preferenceTotal = draft.getPreferenceTotal(whichPickersPreferences, whichPickersPicks);
+            preferenceTotalElement.textContent = preferenceTotal;
+            preferenceTotal /= draft.getNumPicksMade(whichPickersPicks);
+            if (isFinite(preferenceTotal)) {
+               preferenceTotalElement.style.backgroundColor = 'rgb(' + Math.round((1 - preferenceTotal / 100) * 255) + ', ' + Math.round(preferenceTotal / 100 * 255) + ', 85)';
+            } else {
+               preferenceTotalElement.style.backgroundColor = '';
+            }
+         };
+         updatePreferenceTotals(1, 1);
+         updatePreferenceTotals(1, 2);
+         updatePreferenceTotals(2, 2);
+         updatePreferenceTotals(2, 1);
+         document.getElementById('draft-complete').style.visibility = draft.isFinished() ? '' : 'hidden';
       };
 
-      pickButtons.forEach(function (pickButton, whichPick) {
-         pickButton.addEventListener('click', function () {
-            draft.makePick(whichPick);
+      preference1Elements.forEach(function (preference1Element, whichPick) {
+         preference1Element.addEventListener('click', function () {
+            draft.makePick(whichPick, 1);
             updatePage(draft);
          }, false);
       });
 
-      document.getElementById('pick-greedy').addEventListener('click', function () {
-         draft.makePick('greedy');
+      preference2Elements.forEach(function (preference2Element, whichPick) {
+         preference2Element.addEventListener('click', function () {
+            draft.makePick(whichPick, 2);
+            updatePage(draft);
+         }, false);
+      });
+
+      document.getElementById('pick-1-greedy').addEventListener('click', function () {
+         draft.makePick('greedy', 1);
          updatePage(draft);
       }, false);
 
-      document.getElementById('pick-antigreedy').addEventListener('click', function () {
-         draft.makePick('antigreedy');
+      document.getElementById('pick-1-cautious').addEventListener('click', function () {
+         draft.makePick('cautious', 1);
          updatePage(draft);
       }, false);
 
-      document.getElementById('pick-popular').addEventListener('click', function () {
-         draft.makePick('popular');
+      document.getElementById('pick-2-greedy').addEventListener('click', function () {
+         draft.makePick('greedy', 2);
          updatePage(draft);
       }, false);
 
-      document.getElementById('pick-minimax').addEventListener('click', function () {
-         draft.makePick('minimax');
+      document.getElementById('pick-2-cautious').addEventListener('click', function () {
+         draft.makePick('cautious', 2);
          updatePage(draft);
       }, false);
 
@@ -225,16 +254,21 @@ document.addEventListener('DOMContentLoaded', function () {
          updatePage(draft);
       }, false);
 
+      document.getElementById('swap-preferences').addEventListener('click', function () {
+         draft.swapPreferences();
+         updatePage(draft);
+      }, false);
+
       document.getElementById('reset-all').addEventListener('click', function () {
-         draft = createDraft(pickButtons.length);
+         draft = createDraft(pickedBy1Elements.length);
          draft.save();
          updatePage(draft);
       }, false);
 
       if (localStorage && localStorage.getItem('draft')) {
-         draft = createDraft(pickButtons.length, localStorage.getItem('draft'));
+         draft = createDraft(pickedBy1Elements.length, localStorage.getItem('draft'));
       } else {
-         draft = createDraft(pickButtons.length);
+         draft = createDraft(pickedBy1Elements.length);
          draft.save();
       }
       updatePage(draft);

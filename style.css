@@ -52,6 +52,7 @@ h1 {
 .next-to-pick, #draft-complete {
    background-color: #ffffcc;
    border-radius: 8px;
+   box-shadow: 0px 0px 15px 3px #ffffcc;
    color: #000000;
    padding: 8px;
 }

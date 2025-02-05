@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             whichPicker = o.whoPicksNext();
             if (typeof whichPick !== 'number') {
-               if (whichPick === 'cautious') {
+               if (whichPick === 'optimal') {
                   hasBeenPicked = [];
                   numPicksLeft = 0;
                   s.picks.forEach(function (ignore, index) {
@@ -134,14 +134,13 @@ document.addEventListener('DOMContentLoaded', function () {
          s = {
             numPicks: numPicks,
             numPicksMade: [0, 0],
-            picks: []
+            picks: Array.from({length: numPicks}, function () {
+               return {
+                  pickedBy: 0,
+                  prefs: [0, 0]
+               };
+            })
          };
-         for (whichPick = 0; whichPick < numPicks; whichPick += 1) {
-            s.picks.push({
-               pickedBy: 0,
-               prefs: [0, 0]
-            });
-         }
          o.randomize();
       }
       return o;
@@ -150,20 +149,20 @@ document.addEventListener('DOMContentLoaded', function () {
    (function () {
       var draft, pickedBy1Elements, pickedBy2Elements, preference1Elements, preference2Elements, updatePage;
 
-      pickedBy1Elements = Array.prototype.slice.call(document.querySelectorAll('.picked-by-1 .preference'));
-      preference1Elements = Array.prototype.slice.call(document.querySelectorAll('.unpicked-by-1 .preference'));
-      preference2Elements = Array.prototype.slice.call(document.querySelectorAll('.unpicked-by-2 .preference'));
-      pickedBy2Elements = Array.prototype.slice.call(document.querySelectorAll('.picked-by-2 .preference'));
+      pickedBy1Elements = Array.from(document.querySelectorAll('.picked-by-1 .preference'));
+      preference1Elements = Array.from(document.querySelectorAll('.unpicked-by-1 .preference'));
+      preference2Elements = Array.from(document.querySelectorAll('.unpicked-by-2 .preference'));
+      pickedBy2Elements = Array.from(document.querySelectorAll('.picked-by-2 .preference'));
 
       updatePage = function (draft) {
          var updatePreferenceElement, updatePreferenceTotals;
-         Array.prototype.slice.call(document.querySelectorAll('.next-to-pick')).forEach(function (element, index) {
+         Array.from(document.querySelectorAll('.next-to-pick')).forEach(function (element, index) {
             element.style.visibility = draft.whoPicksNext() === index + 1 ? '' : 'hidden';
          });
-         document.getElementById('pick-1-greedy').disabled = draft.whoPicksNext() !== 1;
-         document.getElementById('pick-1-cautious').disabled = draft.whoPicksNext() !== 1;
-         document.getElementById('pick-2-greedy').disabled = draft.whoPicksNext() !== 2;
-         document.getElementById('pick-2-cautious').disabled = draft.whoPicksNext() !== 2;
+         document.querySelector('#pick-1-greedy').disabled = draft.whoPicksNext() !== 1;
+         document.querySelector('#pick-1-optimal').disabled = draft.whoPicksNext() !== 1;
+         document.querySelector('#pick-2-greedy').disabled = draft.whoPicksNext() !== 2;
+         document.querySelector('#pick-2-optimal').disabled = draft.whoPicksNext() !== 2;
          updatePreferenceElement = function (whichPicker, element, whichPick) {
             var preference;
             preference = draft.getPreference(whichPicker, whichPick);
@@ -198,11 +197,11 @@ document.addEventListener('DOMContentLoaded', function () {
          });
          updatePreferenceTotals = function (whichPickersPreferences, whichPickersPicks) {
             var preferenceTotal, preferenceTotalElement;
-            preferenceTotalElement = Array.prototype.slice.call(document.querySelectorAll('.picker-' + whichPickersPreferences + '-info .preference'))[whichPickersPreferences === whichPickersPicks ? 0 : 1];
+            preferenceTotalElement = Array.from(document.querySelectorAll('.picker-' + whichPickersPreferences + '-info .preference'))[whichPickersPreferences === whichPickersPicks ? 0 : 1];
             preferenceTotal = draft.getPreferenceTotal(whichPickersPreferences, whichPickersPicks);
             preferenceTotalElement.textContent = preferenceTotal;
             preferenceTotal /= draft.getNumPicksMade(whichPickersPicks);
-            if (isFinite(preferenceTotal)) {
+            if (Number.isFinite(preferenceTotal)) {
                preferenceTotalElement.style.backgroundColor = 'rgb(' + Math.round((1 - preferenceTotal / 100) * 255) + ', ' + Math.round(preferenceTotal / 100 * 255) + ', 85)';
             } else {
                preferenceTotalElement.style.backgroundColor = '';
@@ -212,7 +211,7 @@ document.addEventListener('DOMContentLoaded', function () {
          updatePreferenceTotals(1, 2);
          updatePreferenceTotals(2, 2);
          updatePreferenceTotals(2, 1);
-         document.getElementById('draft-complete').style.visibility = draft.isFinished() ? '' : 'hidden';
+         document.querySelector('#draft-complete').style.visibility = draft.isFinished() ? '' : 'hidden';
       };
 
       preference1Elements.forEach(function (preference1Element, whichPick) {
@@ -229,37 +228,37 @@ document.addEventListener('DOMContentLoaded', function () {
          }, false);
       });
 
-      document.getElementById('pick-1-greedy').addEventListener('click', function () {
+      document.querySelector('#pick-1-greedy').addEventListener('click', function () {
          draft.makePick('greedy', 1);
          updatePage(draft);
       }, false);
 
-      document.getElementById('pick-1-cautious').addEventListener('click', function () {
-         draft.makePick('cautious', 1);
+      document.querySelector('#pick-1-optimal').addEventListener('click', function () {
+         draft.makePick('optimal', 1);
          updatePage(draft);
       }, false);
 
-      document.getElementById('pick-2-greedy').addEventListener('click', function () {
+      document.querySelector('#pick-2-greedy').addEventListener('click', function () {
          draft.makePick('greedy', 2);
          updatePage(draft);
       }, false);
 
-      document.getElementById('pick-2-cautious').addEventListener('click', function () {
-         draft.makePick('cautious', 2);
+      document.querySelector('#pick-2-optimal').addEventListener('click', function () {
+         draft.makePick('optimal', 2);
          updatePage(draft);
       }, false);
 
-      document.getElementById('reset-picks').addEventListener('click', function () {
+      document.querySelector('#reset-picks').addEventListener('click', function () {
          draft.resetPicks();
          updatePage(draft);
       }, false);
 
-      document.getElementById('swap-preferences').addEventListener('click', function () {
+      document.querySelector('#swap-preferences').addEventListener('click', function () {
          draft.swapPreferences();
          updatePage(draft);
       }, false);
 
-      document.getElementById('reset-all').addEventListener('click', function () {
+      document.querySelector('#reset-all').addEventListener('click', function () {
          draft = createDraft(pickedBy1Elements.length);
          draft.save();
          updatePage(draft);

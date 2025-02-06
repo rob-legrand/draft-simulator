@@ -1,12 +1,12 @@
-/*jslint browser: true, indent: 3 */
+/*jslint browser */
 
 document.addEventListener('DOMContentLoaded', function () {
    'use strict';
-   var createDraft;
 
-   createDraft = function (numPicks, oldState) {
-      var o, s, whichPick;
-      o = {
+   const createDraft = function (numPicks, oldState) {
+      let s;
+
+      const o = {
          getNumPicks: function () {
             return s.numPicks;
          },
@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return s.numPicksMade[0] + s.numPicksMade[1];
          },
          randomize: function () {
-            var hasBeenUsed;
+            let hasBeenUsed;
             hasBeenUsed = [];
             s.picks.forEach(function (pick) {
                pick.prefs = [];
@@ -42,8 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
          swapPreferences: function () {
             o.resetPicks();
             s.picks.forEach(function (pick) {
-               var tempPref;
-               tempPref = pick.prefs[0];
+               const tempPref = pick.prefs[0];
                pick.prefs[0] = pick.prefs[1];
                pick.prefs[1] = tempPref;
             });
@@ -53,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return s.picks[whichPick].prefs[whichPicker - 1];
          },
          getPreferenceTotal: function (whichPickersPreferences, whichPickersPicks) {
-            var total;
+            let total;
             total = 0;
             s.picks.forEach(function (pick) {
                if (pick.pickedBy === whichPickersPicks) {
@@ -72,11 +71,25 @@ document.addEventListener('DOMContentLoaded', function () {
             return o.getNumPicksMade() >= o.getNumPicks();
          },
          whoPicksNext: function () {
-            return o.isFinished() ? 0 : o.getNumPicksMade(1) <= o.getNumPicksMade(2) ? 1 : 2;
+            return (
+               o.isFinished()
+               ? 0
+               : o.getNumPicksMade(1) <= o.getNumPicksMade(2)
+               ? 1
+               : 2
+            );
          },
          makePick: function (whichPick, whichPicker) {
-            var hasBeenPicked, numPicksLeft, whoPicksNext;
-            if (o.isFinished() || (typeof whichPicker === 'number' && whichPicker !== o.whoPicksNext())) {
+            let hasBeenPicked;
+            let numPicksLeft;
+            let whoPicksNext;
+            if (
+               o.isFinished()
+               || (
+                  typeof whichPicker === 'number'
+                  && whichPicker !== o.whoPicksNext()
+               )
+            ) {
                return false;
             }
             whichPicker = o.whoPicksNext();
@@ -91,13 +104,20 @@ document.addEventListener('DOMContentLoaded', function () {
                      }
                   });
                   whoPicksNext = 0;
+                  const findPick = function (pick, index) {
+                     if (
+                        !hasBeenPicked[index]
+                        && (
+                           hasBeenPicked[whichPick]
+                           || pick.prefs[whoPicksNext] < s.picks[whichPick].prefs[whoPicksNext]
+                        )
+                     ) {
+                        whichPick = index;
+                     }
+                  };
                   while (numPicksLeft > 0) {
                      whichPick = 0;
-                     s.picks.forEach(function (pick, index) {
-                        if (!hasBeenPicked[index] && (hasBeenPicked[whichPick] || pick.prefs[whoPicksNext] < s.picks[whichPick].prefs[whoPicksNext])) {
-                           whichPick = index;
-                        }
-                     });
+                     s.picks.forEach(findPick);
                      hasBeenPicked[whichPick] = true;
                      numPicksLeft -= 1;
                      whoPicksNext = 1 - whoPicksNext;
@@ -105,7 +125,13 @@ document.addEventListener('DOMContentLoaded', function () {
                } else {
                   whichPick = 0;
                   s.picks.forEach(function (pick, index) {
-                     if (!o.hasBeenPicked(index) && (o.hasBeenPicked(whichPick) || pick.prefs[whichPicker - 1] > s.picks[whichPick].prefs[whichPicker - 1])) {
+                     if (
+                        !o.hasBeenPicked(index)
+                        && (
+                           o.hasBeenPicked(whichPick)
+                           || pick.prefs[whichPicker - 1] > s.picks[whichPick].prefs[whichPicker - 1]
+                        )
+                     ) {
                         whichPick = index;
                      }
                   });
@@ -120,26 +146,30 @@ document.addEventListener('DOMContentLoaded', function () {
             return true;
          },
          save: function () {
-            var jsonString;
             if (!localStorage) {
                return false;
             }
-            jsonString = JSON.stringify(s);
+            const jsonString = JSON.stringify(s);
             localStorage.setItem('draft', jsonString);
             return localStorage.getItem('draft') === jsonString;
          }
       };
-      s = typeof oldState === 'string' ? JSON.parse(oldState) : {};
+      s = (
+         typeof oldState === 'string'
+         ? JSON.parse(oldState)
+         : {}
+      );
       if (s.numPicks !== numPicks) {
          s = {
             numPicks: numPicks,
             numPicksMade: [0, 0],
-            picks: Array.from({length: numPicks}, function () {
-               return {
+            picks: Array.from(
+               {length: numPicks},
+               () => ({
                   pickedBy: 0,
                   prefs: [0, 0]
-               };
-            })
+               })
+            )
          };
          o.randomize();
       }
@@ -147,28 +177,37 @@ document.addEventListener('DOMContentLoaded', function () {
    };
 
    (function () {
-      var draft, pickedBy1Elements, pickedBy2Elements, preference1Elements, preference2Elements, updatePage;
+      let draft;
 
-      pickedBy1Elements = Array.from(document.querySelectorAll('.picked-by-1 .preference'));
-      preference1Elements = Array.from(document.querySelectorAll('.unpicked-by-1 .preference'));
-      preference2Elements = Array.from(document.querySelectorAll('.unpicked-by-2 .preference'));
-      pickedBy2Elements = Array.from(document.querySelectorAll('.picked-by-2 .preference'));
+      const pickedBy1Elements = [...document.querySelectorAll('.picked-by-1 .preference')];
+      const preference1Elements = [...document.querySelectorAll('.unpicked-by-1 .preference')];
+      const preference2Elements = [...document.querySelectorAll('.unpicked-by-2 .preference')];
+      const pickedBy2Elements = [...document.querySelectorAll('.picked-by-2 .preference')];
 
-      updatePage = function (draft) {
-         var updatePreferenceElement, updatePreferenceTotals;
-         Array.from(document.querySelectorAll('.next-to-pick')).forEach(function (element, index) {
-            element.style.visibility = draft.whoPicksNext() === index + 1 ? '' : 'hidden';
+      const updatePage = function (draft) {
+         [...document.querySelectorAll('.next-to-pick')].forEach(function (element, index) {
+            element.style.visibility = (
+               draft.whoPicksNext() === index + 1
+               ? ''
+               : 'hidden'
+            );
          });
          document.querySelector('#pick-1-greedy').disabled = draft.whoPicksNext() !== 1;
          document.querySelector('#pick-1-optimal').disabled = draft.whoPicksNext() !== 1;
          document.querySelector('#pick-2-greedy').disabled = draft.whoPicksNext() !== 2;
          document.querySelector('#pick-2-optimal').disabled = draft.whoPicksNext() !== 2;
-         updatePreferenceElement = function (whichPicker, element, whichPick) {
-            var preference;
-            preference = draft.getPreference(whichPicker, whichPick);
+         const updatePreferenceElement = function (whichPicker, element, whichPick) {
+            const preference = draft.getPreference(whichPicker, whichPick);
             element.textContent = preference;
-            element.style.backgroundColor = 'rgb(' + Math.round((1 - preference / 100) * 255) + ', ' + Math.round(preference / 100 * 255) + ', 85)';
-            if (draft.whoPicked(whichPick) === (whichPicker === 1 ? 2 : 1)) {
+            element.style.backgroundColor = (
+               'rgb(' + Math.round((1 - preference / 100) * 255)
+               + ', ' + Math.round(preference / 100 * 255) + ', 85)'
+            );
+            if (draft.whoPicked(whichPick) === (
+               whichPicker === 1
+               ? 2
+               : 1
+            )) {
                element.classList.add('pick-missed');
             } else {
                element.classList.remove('pick-missed');
@@ -181,88 +220,113 @@ document.addEventListener('DOMContentLoaded', function () {
          };
          pickedBy1Elements.forEach(function (element, whichPick) {
             updatePreferenceElement(1, element, whichPick);
-            element.style.visibility = draft.whoPicked(whichPick) === 1 ? '' : 'hidden';
+            element.style.visibility = (
+               draft.whoPicked(whichPick) === 1
+               ? ''
+               : 'hidden'
+            );
          });
          preference1Elements.forEach(function (element, whichPick) {
             updatePreferenceElement(1, element, whichPick);
-            element.style.visibility = draft.whoPicked(whichPick) === 1 ? 'hidden' : '';
+            element.style.visibility = (
+               draft.whoPicked(whichPick) === 1
+               ? 'hidden'
+               : ''
+            );
          });
          preference2Elements.forEach(function (element, whichPick) {
             updatePreferenceElement(2, element, whichPick);
-            element.style.visibility = draft.whoPicked(whichPick) === 2 ? 'hidden' : '';
+            element.style.visibility = (
+               draft.whoPicked(whichPick) === 2
+               ? 'hidden'
+               : ''
+            );
          });
          pickedBy2Elements.forEach(function (element, whichPick) {
             updatePreferenceElement(2, element, whichPick);
-            element.style.visibility = draft.whoPicked(whichPick) === 2 ? '' : 'hidden';
+            element.style.visibility = (
+               draft.whoPicked(whichPick) === 2
+               ? ''
+               : 'hidden'
+            );
          });
-         updatePreferenceTotals = function (whichPickersPreferences, whichPickersPicks) {
-            var preferenceTotal, preferenceTotalElement;
-            preferenceTotalElement = Array.from(document.querySelectorAll('.picker-' + whichPickersPreferences + '-info .preference'))[whichPickersPreferences === whichPickersPicks ? 0 : 1];
+         const updatePreferenceTotals = function (whichPickersPreferences, whichPickersPicks) {
+            let preferenceTotal;
+            const preferenceTotalElements = [...document.querySelectorAll('.picker-' + whichPickersPreferences + '-info .preference')];
+            const preferenceTotalElement = preferenceTotalElements[
+               whichPickersPreferences === whichPickersPicks
+               ? 0
+               : 1
+            ];
             preferenceTotal = draft.getPreferenceTotal(whichPickersPreferences, whichPickersPicks);
             preferenceTotalElement.textContent = preferenceTotal;
             preferenceTotal /= draft.getNumPicksMade(whichPickersPicks);
-            if (Number.isFinite(preferenceTotal)) {
-               preferenceTotalElement.style.backgroundColor = 'rgb(' + Math.round((1 - preferenceTotal / 100) * 255) + ', ' + Math.round(preferenceTotal / 100 * 255) + ', 85)';
-            } else {
-               preferenceTotalElement.style.backgroundColor = '';
-            }
+            preferenceTotalElement.style.backgroundColor = (
+               Number.isFinite(preferenceTotal)
+               ? 'rgb(' + Math.round((1 - preferenceTotal / 100) * 255) + ', ' + Math.round(preferenceTotal / 100 * 255) + ', 85)'
+               : ''
+            );
          };
          updatePreferenceTotals(1, 1);
          updatePreferenceTotals(1, 2);
          updatePreferenceTotals(2, 2);
          updatePreferenceTotals(2, 1);
-         document.querySelector('#draft-complete').style.visibility = draft.isFinished() ? '' : 'hidden';
+         document.querySelector('#draft-complete').style.visibility = (
+            draft.isFinished()
+            ? ''
+            : 'hidden'
+         );
       };
 
       preference1Elements.forEach(function (preference1Element, whichPick) {
          preference1Element.addEventListener('click', function () {
             draft.makePick(whichPick, 1);
             updatePage(draft);
-         }, false);
+         });
       });
 
       preference2Elements.forEach(function (preference2Element, whichPick) {
          preference2Element.addEventListener('click', function () {
             draft.makePick(whichPick, 2);
             updatePage(draft);
-         }, false);
+         });
       });
 
       document.querySelector('#pick-1-greedy').addEventListener('click', function () {
          draft.makePick('greedy', 1);
          updatePage(draft);
-      }, false);
+      });
 
       document.querySelector('#pick-1-optimal').addEventListener('click', function () {
          draft.makePick('optimal', 1);
          updatePage(draft);
-      }, false);
+      });
 
       document.querySelector('#pick-2-greedy').addEventListener('click', function () {
          draft.makePick('greedy', 2);
          updatePage(draft);
-      }, false);
+      });
 
       document.querySelector('#pick-2-optimal').addEventListener('click', function () {
          draft.makePick('optimal', 2);
          updatePage(draft);
-      }, false);
+      });
 
       document.querySelector('#reset-picks').addEventListener('click', function () {
          draft.resetPicks();
          updatePage(draft);
-      }, false);
+      });
 
       document.querySelector('#swap-preferences').addEventListener('click', function () {
          draft.swapPreferences();
          updatePage(draft);
-      }, false);
+      });
 
       document.querySelector('#reset-all').addEventListener('click', function () {
          draft = createDraft(pickedBy1Elements.length);
          draft.save();
          updatePage(draft);
-      }, false);
+      });
 
       if (localStorage && localStorage.getItem('draft')) {
          draft = createDraft(pickedBy1Elements.length, localStorage.getItem('draft'));
@@ -273,4 +337,4 @@ document.addEventListener('DOMContentLoaded', function () {
       updatePage(draft);
    }());
 
-}, false);
+});

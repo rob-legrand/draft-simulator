@@ -3,6 +3,8 @@
 document.addEventListener('DOMContentLoaded', function () {
    'use strict';
 
+   const localStorageKey = 'draft-simulator';
+
    const createDraft = function (numPicks, oldState) {
       let s;
 
@@ -150,8 +152,8 @@ document.addEventListener('DOMContentLoaded', function () {
                return false;
             }
             const jsonString = JSON.stringify(s);
-            localStorage.setItem('draft', jsonString);
-            return localStorage.getItem('draft') === jsonString;
+            localStorage.setItem(localStorageKey, jsonString);
+            return localStorage.getItem(localStorageKey) === jsonString;
          }
       };
       s = (
@@ -328,8 +330,8 @@ document.addEventListener('DOMContentLoaded', function () {
          updatePage(draft);
       });
 
-      if (localStorage && localStorage.getItem('draft')) {
-         draft = createDraft(pickedBy1Elements.length, localStorage.getItem('draft'));
+      if (localStorage && localStorage.getItem(localStorageKey)) {
+         draft = createDraft(pickedBy1Elements.length, localStorage.getItem(localStorageKey));
       } else {
          draft = createDraft(pickedBy1Elements.length);
          draft.save();
